@@ -1,5 +1,5 @@
 # FlexCHOP
-NVIDIA FleX 1.1 solver integration in TouchDesigner as a CHOP with a limited feature set :
+NVIDIA FleX 1.1 solver (https://developer.nvidia.com/flex) integration in TouchDesigner as a CHOP with a limited feature set :
 * liquid particles only
 * planes, boxes and spheres collisions
 * simple disc and rectangle emitters
@@ -28,5 +28,4 @@ This is provided as is, mainly as a starting point for people interested in exte
 I have an ongoing TOP implementation in TouchDesigner, more optimized and with a more complete feature set which was used on a few projects of mine, such as Fluid Structure (https://vimeo.com/218695680) and lull, with AV&C (https://vimeo.com/154879680)
 
 Vincent Houzé
-
 www.foliativ.net
