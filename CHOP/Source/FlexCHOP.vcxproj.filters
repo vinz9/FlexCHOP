@@ -1,0 +1,134 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="FlexCHOP.cpp" />
+    <ClCompile Include="..\..\flex\core\maths.cpp">
+      <Filter>FlexCore</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\flex\core\mesh.cpp">
+      <Filter>FlexCore</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\flex\core\perlin.cpp">
+      <Filter>FlexCore</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\flex\core\pfm.cpp">
+      <Filter>FlexCore</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\flex\core\platform.cpp">
+      <Filter>FlexCore</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\flex\core\sdf.cpp">
+      <Filter>FlexCore</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\flex\core\tga.cpp">
+      <Filter>FlexCore</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\flex\core\voxelize.cpp">
+      <Filter>FlexCore</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\flex\core\aabbtree.cpp">
+      <Filter>FlexCore</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\flex\core\core.cpp">
+      <Filter>FlexCore</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\flex\core\extrude.cpp">
+      <Filter>FlexCore</Filter>
+    </ClCompile>
+    <ClCompile Include="FlexSystem.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="CHOP_CPlusPlusBase.h" />
+    <ClInclude Include="FlexCHOP.h" />
+    <ClInclude Include="..\..\flex\include\NvFlexDevice.h">
+      <Filter>Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\flex\include\NvFlexExt.h">
+      <Filter>Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\flex\include\NvFlex.h">
+      <Filter>Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\flex\core\mat22.h">
+      <Filter>FlexCore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\flex\core\mat33.h">
+      <Filter>FlexCore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\flex\core\mat44.h">
+      <Filter>FlexCore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\flex\core\maths.h">
+      <Filter>FlexCore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\flex\core\matnn.h">
+      <Filter>FlexCore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\flex\core\mesh.h">
+      <Filter>FlexCore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\flex\core\perlin.h">
+      <Filter>FlexCore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\flex\core\pfm.h">
+      <Filter>FlexCore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\flex\core\platform.h">
+      <Filter>FlexCore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\flex\core\point3.h">
+      <Filter>FlexCore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\flex\core\quat.h">
+      <Filter>FlexCore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\flex\core\sdf.h">
+      <Filter>FlexCore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\flex\core\skylight.h">
+      <Filter>FlexCore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\flex\core\tga.h">
+      <Filter>FlexCore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\flex\core\types.h">
+      <Filter>FlexCore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\flex\core\vec2.h">
+      <Filter>FlexCore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\flex\core\vec3.h">
+      <Filter>FlexCore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\flex\core\vec4.h">
+      <Filter>FlexCore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\flex\core\voxelize.h">
+      <Filter>FlexCore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\flex\core\aabbtree.h">
+      <Filter>FlexCore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\flex\core\cloth.h">
+      <Filter>FlexCore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\flex\core\convex.h">
+      <Filter>FlexCore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\flex\core\core.h">
+      <Filter>FlexCore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\flex\core\extrude.h">
+      <Filter>FlexCore</Filter>
+    </ClInclude>
+    <ClInclude Include="FlexSystem.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="FlexCore">
+      <UniqueIdentifier>{4d575cfb-c9e1-46b3-8875-4c8193172647}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Include">
+      <UniqueIdentifier>{16536796-9b8b-4f92-8dd3-e9e5eeae4bca}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
