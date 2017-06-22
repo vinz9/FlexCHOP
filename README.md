@@ -1,13 +1,13 @@
 # FlexCHOP
 
-<img src="https://github.com/vinz9/FlexCHOP/blob/master/flexChop.png">
-
 NVIDIA FleX 1.1 solver (https://developer.nvidia.com/flex) integration in TouchDesigner as a CHOP with a limited feature set :
 * liquid particles only
 * planes, boxes and spheres collisions
 * simple disc and rectangle emitters
 
 A NVIDIA graphics card is required since the library uses CUDA. Geforce 1070 or better recommended
+
+<img src="https://github.com/vinz9/FlexCHOP/blob/master/flexChop.png">
 
 ## Usage
 
