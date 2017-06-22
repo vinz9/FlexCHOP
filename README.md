@@ -6,7 +6,7 @@ NVIDIA FleX 1.1 solver integration in TouchDesigner as a CHOP with a limited fea
 
 A NVIDIA graphics card is required since the library uses CUDA. Geforce 1070 or better recommended
 
-##Usage
+## Usage
 
 A sample Toe file for TouchDesigner 099 is provided in CHOP/Toe/demo.toe
 Pressing R in perform mode will reset the timeline to frame 1 which resets the simulation.
@@ -23,7 +23,7 @@ Refer to the sample Toe to see which channels are required (channel order is imp
 To compile with Visual Studio 2015, download the FleX 1.1 library from https://developer.nvidia.com/gameworksdownload and place the flex folder at the root of the library
 
 
-##Disclaimer
+## Disclaimer
 This is provided as is, mainly as a starting point for people interested in extending TouchDesigner with external c++ libraries.
 I have an ongoing TOP implementation in TouchDesigner, more optimized and with a more complete feature set which was used on a few projects of mine, such as Fluid Structure (https://vimeo.com/218695680) and lull, with AV&C (https://vimeo.com/154879680)
 
