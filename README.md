@@ -23,7 +23,8 @@ Refer to the sample Toe to see which channels are required (channel order is imp
 
 
 ## Compilation
-To compile with Visual Studio 2015, download the FleX 1.1 library from https://developer.nvidia.com/gameworksdownload and place the flex folder at the root of the library
+To compile with Visual Studio 2015, download the FleX 1.1 library from https://developer.nvidia.com/gameworksdownload and place the flex folder at the root of the library.
+You also need to manually copy the flex .dlls (NvFlexDeviceRelease_x64.dll, NvFlexExtReleaseCUDA_x64.dll, NvFlexReleaseCUDA_x64.dll) from flex\bin to CHOP\Source\Release or the FlexChop dll will fail to load.
 
 
 ## Disclaimer
