@@ -515,8 +515,6 @@ void FlexSystem::postInitScene(){
 
 	g_flex = NvFlexCreateSolver(g_flexLib, maxParticles, g_maxDiffuseParticles, g_maxNeighborsPerParticle);
 
-	g_buffers->MapBuffers();
-
 }
 
 

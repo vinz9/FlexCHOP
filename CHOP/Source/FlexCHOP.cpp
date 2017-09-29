@@ -154,44 +154,6 @@ FlexCHOP::getChannelName(int index, void* reserved)
 		case 5:
 			name = "vz";
 			break;
-		case 6:
-			name = "q1x";
-			break;
-		case 7:
-			name = "q1y";
-			break;
-		case 8:
-			name = "q1z";
-			break;
-		case 9:
-			name = "q1w";
-			break;
-		case 10:
-			name = "q2x";
-			break;
-		case 11:
-			name = "q2y";
-			break;
-		case 12:
-			name = "q2z";
-			break;
-		case 13:
-			name = "q2w";
-			break;
-		case 14:
-			name = "q3x";
-			break;
-		case 15:
-			name = "q3y";
-			break;
-		case 16:
-			name = "q3z";
-			break;
-		case 17:
-			name = "q3w";
-			break;
-
-
 			}
 	return name;
 }
