@@ -13,13 +13,31 @@ typedef unsigned int       uint32_t;
 extern "C"
 {
 
-DLLEXPORT
-int
-GetCHOPAPIVersion(void)
-{
-	// Always return CHOP_CPLUSPLUS_API_VERSION in this function.
-	return CHOP_CPLUSPLUS_API_VERSION;
-}
+	DLLEXPORT
+		void
+		FillCHOPPluginInfo(CHOP_PluginInfo *info)
+	{
+		// Always set this to CHOPCPlusPlusAPIVersion.
+		info->apiVersion = CHOPCPlusPlusAPIVersion;
+
+		// The opType is the unique name for this CHOP. It must start with a 
+		// capital A-Z character, and all the following characters must lower case
+		// or numbers (a-z, 0-9)
+		info->customOPInfo.opType->setString("Flex");
+
+		// The opLabel is the text that will show up in the OP Create Dialog
+		info->customOPInfo.opLabel->setString("Flex");
+
+		// Information about the author of this OP
+		info->customOPInfo.authorName->setString("Vincent Houze");
+		//info->customOPInfo.authorEmail->setString("email@email.com");
+
+		// This CHOP can work with 0 inputs
+		info->customOPInfo.minInputs = 0;
+
+		// It can accept up to 1 input though, which changes it's behavior
+		info->customOPInfo.maxInputs = 0;
+	}
 
 DLLEXPORT
 CHOP_CPlusPlusBase*
@@ -71,7 +89,7 @@ FlexCHOP::~FlexCHOP()
 }
 
 void
-FlexCHOP::getGeneralInfo(CHOP_GeneralInfo *ginfo)
+FlexCHOP::getGeneralInfo(CHOP_GeneralInfo* ginfo, const OP_Inputs *inputs, void* reserved1)
 {
 	// This will cause the node to cook every frame
 	ginfo->cookEveryFrameIfAsked = true;
@@ -80,7 +98,7 @@ FlexCHOP::getGeneralInfo(CHOP_GeneralInfo *ginfo)
 }
 
 bool
-FlexCHOP::getOutputInfo(CHOP_OutputInfo *info)
+FlexCHOP::getOutputInfo(CHOP_OutputInfo* info, const OP_Inputs *inputs, void *reserved1)
 {
 	
 	if (FlexSys->g_flex){
@@ -98,7 +116,7 @@ FlexCHOP::getOutputInfo(CHOP_OutputInfo *info)
 
 }
 
-void FlexCHOP::updateParams(OP_Inputs* inputs) {
+void FlexCHOP::updateParams(const OP_Inputs* inputs) {
 
 	FlexSys->g_profile = inputs->getParInt("Profile");
 
@@ -130,38 +148,36 @@ void FlexCHOP::updateParams(OP_Inputs* inputs) {
 
 }
 
-const char*
-FlexCHOP::getChannelName(int index, void* reserved)
+void
+FlexCHOP::getChannelName(int32_t index, OP_String *name,
+										const OP_Inputs *inputs, void* reserved1)
 {
-	const char* name = "";
-
 	switch(index) {
 		case 0:
-			name = "tx";
+			name->setString("tx");
 			break;
 		case 1:
-			name = "ty";
+			name->setString("ty");
 			break;
 		case 2:
-			name = "tz";
+			name->setString("tz");
 			break;
 		case 3:
-			name = "vx";
+			name->setString("vx");
 			break;
 		case 4:
-			name = "vy";
+			name->setString("vy");
 			break;
 		case 5:
-			name = "vz";
+			name->setString("vz");
 			break;
 			}
-	return name;
 }
 
 void
-FlexCHOP::execute(const CHOP_Output* output,
-								OP_Inputs* inputs,
-								void* reserved)
+FlexCHOP::execute(CHOP_Output* output,
+							const OP_Inputs* inputs,
+							void* reserved1)
 {
 	myExecuteCount++;
 
@@ -391,8 +407,8 @@ FlexCHOP::execute(const CHOP_Output* output,
 
 }
 
-int
-FlexCHOP::getNumInfoCHOPChans()
+int32_t
+FlexCHOP::getNumInfoCHOPChans(void *reserved1)
 {
 	// We return the number of channel we want to output to any Info CHOP
 	// connected to the CHOP. In this example we are just going to send one channel.
@@ -400,8 +416,7 @@ FlexCHOP::getNumInfoCHOPChans()
 }
 
 void
-FlexCHOP::getInfoCHOPChan(int index,
-										OP_InfoCHOPChan *chan)
+FlexCHOP::getInfoCHOPChan(int32_t index, OP_InfoCHOPChan* chan, void* reserved1)
 {
 	// This function will be called once for each channel we said we'd want to return
 	// In this example it'll only be called once.
@@ -409,17 +424,17 @@ FlexCHOP::getInfoCHOPChan(int index,
 	switch (index) {
 
 	case 0:
-		chan->name = "executeCount";
+		chan->name->setString("executeCount");
 		chan->value = myExecuteCount;
 		break;
 
 	case 1:
-		chan->name = "flexTime";
+		chan->name->setString("flexTime");
 		chan->value = FlexSys->simLatency;
 		break;
 
 	case 2:
-		chan->name = "solveVelocities";
+		chan->name->setString("solveVelocities");
 		chan->value = FlexSys->g_timers.solveVelocities;
 		break;
 
@@ -428,7 +443,7 @@ FlexCHOP::getInfoCHOPChan(int index,
 }
 
 bool		
-FlexCHOP::getInfoDATSize(OP_InfoDATSize *infoSize)
+FlexCHOP::getInfoDATSize(OP_InfoDATSize* infoSize, void *reserved1)
 {
 	infoSize->rows = 5;
 	infoSize->cols = 2;
@@ -439,9 +454,9 @@ FlexCHOP::getInfoDATSize(OP_InfoDATSize *infoSize)
 }
 
 void
-FlexCHOP::getInfoDATEntries(int index,
-										int nEntries,
-										OP_InfoDATEntries *entries)
+FlexCHOP::getInfoDATEntries(int32_t index, int32_t nEntries,
+							OP_InfoDATEntries* entries,
+							void *reserved1)
 {
 	
 	static char tempBuffer1[4096];
@@ -476,11 +491,11 @@ FlexCHOP::getInfoDATEntries(int index,
 
 	}
 
-	entries->values[0] = tempBuffer1;
-	entries->values[1] = tempBuffer2;
+	entries->values[0]->setString(tempBuffer1);
+	entries->values[1]->setString(tempBuffer2);
 }
 
-void FlexCHOP::setupParameters(OP_ParameterManager* manager)
+void FlexCHOP::setupParameters(OP_ParameterManager* manager, void* reserved1)
 {
 
 	// reset

@@ -27,27 +27,27 @@ public:
 	FlexCHOP(const OP_NodeInfo *info);
 	virtual ~FlexCHOP();
 
-	virtual void		getGeneralInfo(CHOP_GeneralInfo*) override;
-	virtual bool		getOutputInfo(CHOP_OutputInfo*) override;
-	virtual const char*	getChannelName(int index, void* reserved) override;
+	virtual void		getGeneralInfo(CHOP_GeneralInfo*, const OP_Inputs *inputs, void* reserved1) override;
+	virtual bool		getOutputInfo(CHOP_OutputInfo*, const OP_Inputs *inputs, void *reserved1)override;
+	virtual void		getChannelName(int32_t index, OP_String *name,
+									const OP_Inputs *inputs, void* reserved1) override;
 
-	virtual void		execute(const CHOP_Output*,
-		OP_Inputs*,
-		void* reserved) override;
+	virtual void		execute(CHOP_Output* outputs,
+		const OP_Inputs* inputs,
+		void* reserved1) override;
 
 
-	virtual int			getNumInfoCHOPChans() override;
-	virtual void		getInfoCHOPChan(int index,
-		OP_InfoCHOPChan* chan) override;
+	virtual int32_t		getNumInfoCHOPChans(void *reserved1) override;
+	virtual void		getInfoCHOPChan(int32_t index, OP_InfoCHOPChan* chan, void* reserved1) override;
 
-	virtual bool		getInfoDATSize(OP_InfoDATSize* infoSize) override;
-	virtual void		getInfoDATEntries(int index,
-		int nEntries,
-		OP_InfoDATEntries* entries) override;
+	virtual bool		getInfoDATSize(OP_InfoDATSize* infoSize, void *reserved1) override;
+	virtual void		getInfoDATEntries(int32_t index, int32_t nEntries,
+											OP_InfoDATEntries* entries,
+											void *reserved1) override;
 
-	void updateParams(OP_Inputs* inputs);
+	void updateParams(const OP_Inputs* inputs);
 
-	virtual void		setupParameters(OP_ParameterManager* manager) override;
+	virtual void		setupParameters(OP_ParameterManager* manager, void* reserved1) override;
 	//virtual void		pulsePressed(const char* name) override;
 
 	float maxVel;
