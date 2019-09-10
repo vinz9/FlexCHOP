@@ -1,5 +1,8 @@
 # FlexCHOP
 
+Branch 2018.40000 :
+Upgrade to work with 2018.40000 series of TouchDesigner, and be usable as a Custom OP
+
 NVIDIA FleX 1.1 solver (https://developer.nvidia.com/flex) integration in TouchDesigner as a CHOP with a limited feature set :
 * liquid particles only
 * planes, boxes and spheres collisions
@@ -25,6 +28,7 @@ Refer to the sample Toe to see which channels are required (channel order is imp
 ## Compilation
 To compile with Visual Studio 2015, download the FleX 1.1 library from https://developer.nvidia.com/gameworksdownload and place the flex folder at the root of the repository.
 You also need to manually copy the flex .dlls (NvFlexDeviceRelease_x64.dll, NvFlexExtReleaseCUDA_x64.dll, NvFlexReleaseCUDA_x64.dll) from flex\bin to CHOP\Source\Release or the FlexChop dll will fail to load.
+As well, since TouchDesigner 2018.40000 series ships with CUDA 9.2, but Flex 1.1 requires CUDA 8.0, cudart64_80.dll will need to be next to the Flex binary too.
 
 
 ## Disclaimer
