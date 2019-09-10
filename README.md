@@ -1,7 +1,6 @@
 # FlexCHOP
 
-Branch 2018.40000 :
-Upgrade to work with 2018.40000 series of TouchDesigner, and be usable as a Custom OP
+Upgraded to work with 2019.14650 and later series of TouchDesigner (Spring 2019 Release), and be usable as a Custom OP
 
 NVIDIA FleX 1.1 solver (https://developer.nvidia.com/flex) integration in TouchDesigner as a CHOP with a limited feature set :
 * liquid particles only

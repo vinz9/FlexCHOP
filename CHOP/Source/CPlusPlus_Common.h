@@ -31,7 +31,7 @@ stays the same, otherwise changes won't be backwards compatible
 #define __CPlusPlus_Common
 
 
-#ifdef WIN32
+#ifdef _WIN32
 	#define NOMINMAX
 	#include <windows.h>
 	#include <stdint.h>
@@ -45,6 +45,11 @@ stays the same, otherwise changes won't be backwards compatible
 #include <assert.h>
 #include <cmath>
 #include <float.h>
+
+#ifndef PyObject_HEAD
+	struct _object;
+	typedef _object PyObject;
+#endif
 
 struct cudaArray;
 
@@ -124,7 +129,17 @@ public:
 	// the majorVersion is the same.
 	int32_t			minorVersion = 1;
 
-	int32_t			reserved[100];
+	// If this Custom OP is using CPython objects (PyObject* etc.) obtained via
+	// getParPython() calls, this needs to be set to the Python
+	// version this plugin is compiled against.
+	// 
+	// This ensures when TD's Python version is upgraded the plugins will
+	// error cleanly. This should be set to PY_VERSION as defined in
+	// patchlevel.h from the Python include folder. (E.g, "3.5.1")
+	// It should be left unchanged if CPython isn't being used in this plugin.
+	OP_String*		pythonVersion;
+
+	int32_t			reserved[98];
 };
 
 
@@ -144,7 +159,7 @@ public:
 	// It's possible this will be 0 the first few times the operator cooks,
 	// incase it cooks while TouchDesigner is still loading up
 
-#ifdef WIN32
+#ifdef _WIN32
 	HWND			mainWindowHandle;
 #endif
 
@@ -169,13 +184,15 @@ public:
 	const char*
 	getCell(int32_t row, int32_t col) const
 	{
-		static_assert(offsetof(OP_DATInput, cellData) == 24, "Incorrect Alignment");
 		return cellData[row * numCols + col];
 	}
 
 	const char**	cellData;
 
-	int32_t         reserved[20];
+	// The number of times this node has cooked
+	int64_t			totalCooks;
+
+	int32_t         reserved[18];
 };
 
 
@@ -214,7 +231,10 @@ public:
 	// When the TOP_ExecuteMode is CUDA, this will be filled in
 	cudaArray*		cudaInput;
 
-	int32_t			reserved[16];
+	// The number of times this node has cooked
+	int64_t			totalCooks;
+
+	int32_t			reserved[14];
 };
 
 class OP_String
@@ -261,8 +281,6 @@ public:
 	const float*
 	getChannelData(int32_t i) const
 	{
-		static_assert(offsetof(OP_CHOPInput, channelData) == 40, "Incorrect Alignment");
-		static_assert(offsetof(OP_CHOPInput, nameData) == 48, "Incorrect Alignment");
 		return channelData[i];
 	}
 
@@ -277,13 +295,13 @@ public:
 		return nameData[i];
 	}
 
-protected:
-
 	const float**	channelData;
 	const char**	nameData;
 
+	// The number of times this node has cooked
+	int64_t			totalCooks;
 
-	int32_t			reserved[20];
+	int32_t			reserved[18];
 };
 
 
@@ -298,8 +316,10 @@ public:
 	double			worldTransform[4][4];
 	double			localTransform[4][4];
 
+	// The number of times this node has cooked
+	int64_t			totalCooks;
 
-	int32_t			reserved[20];
+	int32_t			reserved[18];
 };
 
 
@@ -327,6 +347,7 @@ enum class PrimitiveType : int32_t
 	Invalid,
 	Polygon = 0,
 };
+
 
 class Vector
 {
@@ -594,6 +615,126 @@ public:
 	float w;
 };
 
+class BoundingBox
+{
+public:
+	BoundingBox(float minx, float miny, float minz,
+		float maxx, float maxy, float maxz) :
+		minX(minx), minY(miny), minZ(minz), maxX(maxx), maxY(maxy), maxZ(maxz)
+	{
+	}
+
+	BoundingBox(const Position& min, const Position& max)
+	{
+		minX = min.x;
+		maxX = max.x;
+		minY = min.y;
+		maxY = max.y;
+		minZ = min.z;
+		maxZ = max.z;
+	}
+
+	BoundingBox(const Position& center, float x, float y, float z)
+	{
+		minX = center.x - x;
+		maxX = center.x + x;
+		minY = center.y - y;
+		maxY = center.y + y;
+		minZ = center.z - z;
+		maxZ = center.z + z;
+	}
+
+	// enlarge the bounding box by the input point Position
+	void
+	enlargeBounds(const Position& pos)
+	{
+		if (pos.x < minX)
+			minX = pos.x;
+		if (pos.x > maxX)
+			maxX = pos.x;
+		if (pos.y < minY)
+			minY = pos.y;
+		if (pos.y > maxY)
+			maxY = pos.y;
+		if (pos.z < minZ)
+			minZ = pos.z;
+		if (pos.z > maxZ)
+			maxZ = pos.z;
+	}
+
+	// enlarge the bounding box by the input bounding box:
+	void
+	enlargeBounds(const BoundingBox &box)
+	{
+		if (box.minX < minX)
+			minX = box.minX;
+		if (box.maxX > maxX)
+			maxX = box.maxX;
+		if (box.minY < minY)
+			minY = box.minY;
+		if (box.maxY > maxY)
+			maxY = box.maxY;
+		if (box.minZ < minZ)
+			minZ = box.minZ;
+		if (box.maxZ > maxZ)
+			maxZ = box.maxZ;
+	}
+
+	// returns the bounding box length in x axis:
+	float
+	sizeX()
+	{
+		return maxX - minX;
+	}
+
+	// returns the bounding box length in y axis:
+	float
+	sizeY()
+	{
+		return maxY - minY;
+	}
+
+	// returns the bounding box length in z axis:
+	float
+	sizeZ()
+	{
+		return maxZ - minZ;
+	}
+
+	bool
+	getCenter(Position* pos)
+	{
+		if (!pos)
+			return false;
+		pos->x = (minX + maxX) / 2.0f;
+		pos->y = (minY + maxY) / 2.0f;
+		pos->z = (minZ + maxZ) / 2.0f;
+		return true;
+	}
+
+	// verifies if the input position (pos) is inside the current bounding box or not:
+	bool
+	isInside(const Position& pos)
+	{
+		if (pos.x >= minX && pos.x <= maxX &&
+			pos.y >= minY && pos.y <= maxY &&
+			pos.z >= minZ && pos.z <= maxZ)
+			return true;
+		else
+			return false;
+	}
+
+
+	float minX;
+	float minY;
+	float minZ;
+
+	float maxX;
+	float maxY;
+	float maxZ;
+
+};
+
 
 class SOP_NormalInfo
 {
@@ -806,23 +947,23 @@ public:
 		return myPrimsInfo[primIndex];
 	}
 
-	//// Returns the full list of all the point indices for all primitives.
-	//// The primitives are stored back to back in this array.
-	//// This is a faster but harder way to work with primitives than
-	//// getPrimPointIndices()
+	// Returns the full list of all the point indices for all primitives.
+	// The primitives are stored back to back in this array.
+	// This is a faster but harder way to work with primitives than
+	// getPrimPointIndices()
 	const int32_t*
 	getAllPrimPointIndices()
 	{
 		return myPrimPointIndices;
 	}
 
-protected:
-
-	// Don't try to access these directly, use the public functions
 	SOP_PrimitiveInfo*		myPrimsInfo;
-	const int32_t*		myPrimPointIndices;
+	const int32_t*			myPrimPointIndices;
 
-	int32_t			reserved[100];
+	// The number of times this node has cooked
+	int64_t			totalCooks;
+
+	int32_t			reserved[98];
 };
 
 
@@ -864,6 +1005,45 @@ public:
 
 };
 
+class OP_TimeInfo
+{
+public:
+
+	// same as global Python value absTime.frame. Counts up forever
+	// since the application started. In rootFPS units.
+	int64_t	absFrame;
+
+	// The timeline frame number for this cook
+	double	frame;
+
+	// The timeline FPS/rate this node is cooking at.
+	// If the component this node is located in has Component Time, it's FPS
+	// may be different than the Root FPS
+	double	rate;
+
+	// The frame number for the root timeline. Different than frame
+	// if the node is in a component that has component time.
+	double 	rootFrame;
+
+	// The Root FPS/Rate the file is running at.
+	double	rootRate;
+
+	// The number of frames that have elapsed since the last cook occured.
+	// This can be more than one if frames were dropped.
+	// If this is the first time this node is cooking, this will be 0.0
+	// This is in 'rate' units, not 'rootRate' units.
+	double	deltaFrames;
+
+	// The number of milliseconds that have elapsed since the last cook.
+	// Note that this isn't done via CPU timers, but is instead 
+	// simply deltaFrames * milliSecondsPerFrame
+	double	deltaMS;
+
+
+
+	int32_t	reserved[40];
+};
+
 
 class OP_Inputs
 {
@@ -872,13 +1052,17 @@ public:
 	// be called inside a beginGLCommands()/endGLCommands() section
 	// as they may require GL themselves to complete execution.
 
-	// these are wired into the node
+	// Inputs that are wired into the node. Note that since some inputs
+	// may not be connected this number doesn't mean that that the first N
+	// inputs are connected. For example on a 3 input node if the 3rd input
+	// is only one connected, this will return 1, and getInput*(0) and (1)
+	// will return nullptr.
 	virtual int32_t		getNumInputs() const = 0;
 
-	// may return nullptr when invalid input
+	// Will return nullptr when the input has nothing connected to it.
 	// only valid for C++ TOP operators
 	virtual const OP_TOPInput*		getInputTOP(int32_t index) const = 0;
-	// only valid for C++ CHOP operators
+	// Only valid for C++ CHOP operators
 	virtual const OP_CHOPInput*		getInputCHOP(int32_t index) const = 0;
 	// getInputSOP() declared later on in the class
 	// getInputDAT() declared later on in the class
@@ -964,6 +1148,20 @@ public:
 
 	// only valid for C++ DAT operators
 	virtual const OP_DATInput*		getInputDAT(int32_t index) const = 0;
+
+	// To use Python in your Plugin you need to fill the
+	// customOPInfo.pythonVersion member in Fill*PluginInfo.
+	//
+	// The returned object does NOT have it's reference count incremented.
+	// So increment it if you want to hold onto the object, and only
+	// decement it if you've incremented it.
+	virtual PyObject*				getParPython(const char* name) const = 0;
+
+
+	// Returns a class whose members gives you information about timing
+	// such as FPS and delta-time since the last cook.
+	// See OP_TimeInfo for more information
+	virtual const OP_TimeInfo*		getTimeInfo() const = 0;
 
 };
 
@@ -1139,6 +1337,10 @@ public:
 
 	virtual OP_ParAppendResult		appendSOP(const OP_StringParameter &sp) = 0;
 
+	// To use Python in your Plugin you need to fill the
+	// customOPInfo.pythonVersion member in Fill*PluginInfo.
+	virtual OP_ParAppendResult		appendPython(const OP_StringParameter &sp) = 0;
+
 
 };
 
@@ -1155,7 +1357,7 @@ static_assert(sizeof(OP_CustomOPInfo) == 456, "Incorrect Size");
 
 static_assert(offsetof(OP_NodeInfo, opPath) == 0, "Incorrect Alignment");
 static_assert(offsetof(OP_NodeInfo, opId) == 8, "Incorrect Alignment");
-#ifdef WIN32
+#ifdef _WIN32
 	static_assert(offsetof(OP_NodeInfo, mainWindowHandle) == 16, "Incorrect Alignment");
 	static_assert(sizeof(OP_NodeInfo) == 104, "Incorrect Size");
 #else
@@ -1167,6 +1369,8 @@ static_assert(offsetof(OP_DATInput, opId) == 8, "Incorrect Alignment");
 static_assert(offsetof(OP_DATInput, numRows) == 12, "Incorrect Alignment");
 static_assert(offsetof(OP_DATInput, numCols) == 16, "Incorrect Alignment");
 static_assert(offsetof(OP_DATInput, isTable) == 20, "Incorrect Alignment");
+static_assert(offsetof(OP_DATInput, cellData) == 24, "Incorrect Alignment");
+static_assert(offsetof(OP_DATInput, totalCooks) == 32, "Incorrect Alignment");
 static_assert(sizeof(OP_DATInput) == 112, "Incorrect Size");
 
 static_assert(offsetof(OP_TOPInput, opPath) == 0, "Incorrect Alignment");
@@ -1178,6 +1382,7 @@ static_assert(offsetof(OP_TOPInput, textureType) == 24, "Incorrect Alignment");
 static_assert(offsetof(OP_TOPInput, depth) == 28, "Incorrect Alignment");
 static_assert(offsetof(OP_TOPInput, pixelFormat) == 32, "Incorrect Alignment");
 static_assert(offsetof(OP_TOPInput, cudaInput) == 40, "Incorrect Alignment");
+static_assert(offsetof(OP_TOPInput, totalCooks) == 48, "Incorrect Alignment");
 static_assert(sizeof(OP_TOPInput) == 112, "Incorrect Size");
 
 static_assert(offsetof(OP_CHOPInput, opPath) == 0, "Incorrect Alignment");
@@ -1186,12 +1391,16 @@ static_assert(offsetof(OP_CHOPInput, numChannels) == 12, "Incorrect Alignment");
 static_assert(offsetof(OP_CHOPInput, numSamples) == 16, "Incorrect Alignment");
 static_assert(offsetof(OP_CHOPInput, sampleRate) == 24, "Incorrect Alignment");
 static_assert(offsetof(OP_CHOPInput, startIndex) == 32, "Incorrect Alignment");
+static_assert(offsetof(OP_CHOPInput, channelData) == 40, "Incorrect Alignment");
+static_assert(offsetof(OP_CHOPInput, nameData) == 48, "Incorrect Alignment");
+static_assert(offsetof(OP_CHOPInput, totalCooks) == 56, "Incorrect Alignment");
 static_assert(sizeof(OP_CHOPInput) == 136, "Incorrect Size");
 
 static_assert(offsetof(OP_ObjectInput, opPath) == 0, "Incorrect Alignment");
 static_assert(offsetof(OP_ObjectInput, opId) == 8, "Incorrect Alignment");
 static_assert(offsetof(OP_ObjectInput, worldTransform) == 16, "Incorrect Alignment");
 static_assert(offsetof(OP_ObjectInput, localTransform) == 144, "Incorrect Alignment");
+static_assert(offsetof(OP_ObjectInput, totalCooks) == 272, "Incorrect Alignment");
 static_assert(sizeof(OP_ObjectInput) == 352, "Incorrect Size");
 
 static_assert(offsetof(Position, x) == 0, "Incorrect Alignment");
@@ -1280,4 +1489,5 @@ static_assert(offsetof(OP_StringParameter, label) == 8, "Incorrect Alignment");
 static_assert(offsetof(OP_StringParameter, page) == 16, "Incorrect Alignment");
 static_assert(offsetof(OP_StringParameter, defaultValue) == 24, "Incorrect Alignment");
 static_assert(sizeof(OP_StringParameter) == 112, "Incorrect Size");
+static_assert(sizeof(OP_TimeInfo) == 216, "Incorrect Size");
 #endif

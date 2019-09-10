@@ -122,6 +122,8 @@
       <Filter>FlexCore</Filter>
     </ClInclude>
     <ClInclude Include="FlexSystem.h" />
+    <ClInclude Include="CPlusPlus_Common.h" />
+    <ClInclude Include="GL_Extensions.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="FlexCore">

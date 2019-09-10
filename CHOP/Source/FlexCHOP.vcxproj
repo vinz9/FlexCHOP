@@ -200,8 +200,10 @@
     <ClInclude Include="..\..\flex\include\NvFlexDevice.h" />
     <ClInclude Include="..\..\flex\include\NvFlexExt.h" />
     <ClInclude Include="CHOP_CPlusPlusBase.h" />
+    <ClInclude Include="CPlusPlus_Common.h" />
     <ClInclude Include="FlexCHOP.h" />
     <ClInclude Include="FlexSystem.h" />
+    <ClInclude Include="GL_Extensions.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
