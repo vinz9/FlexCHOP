@@ -5,7 +5,7 @@ Thanks to Malcolm Bechard for the upgrade.
 
 Look at the Releases page https://github.com/vinz9/FlexCHOP/releases for a compiled version.
 
-NVIDIA FleX 1.1 solver (https://developer.nvidia.com/flex) integration in TouchDesigner as a CHOP with a limited feature set :
+NVIDIA FleX 1.2 solver (https://developer.nvidia.com/flex) integration in TouchDesigner as a CHOP with a limited feature set :
 * liquid particles only
 * planes, boxes and spheres collisions
 * simple disc and rectangle emitters
@@ -28,7 +28,7 @@ Refer to the sample Toe to see which channels are required (channel order is imp
 
 
 ## Compilation
-To compile with Visual Studio 2015, download the FleX 1.1 library from https://developer.nvidia.com/gameworksdownload and place the flex folder at the root of the repository.
+To compile with Visual Studio 2015, download the FleX 1.2 library from https://github.com/NVIDIAGameWorks/FleX and put the directories in a flex folder at the root of the repository (you should have flex/bin, flex/core, ... alongside CHOP/Source).
 You also need to manually copy the flex .dlls (NvFlexDeviceRelease_x64.dll, NvFlexReleaseCUDA_x64.dll) from flex\bin to CHOP\Source\Release or the FlexChop dll will fail to load.
 
 

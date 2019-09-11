@@ -101,7 +101,7 @@ bool
 FlexCHOP::getOutputInfo(CHOP_OutputInfo* info, const OP_Inputs *inputs, void *reserved1)
 {
 	
-	if (FlexSys->g_flex){
+	if (FlexSys->g_solver){
 		info->numSamples = FlexSys->g_buffers->positions.size();
 	}else{
 		info->numSamples = 1;
@@ -253,7 +253,7 @@ FlexCHOP::execute(CHOP_Output* output,
 	updateParams(inputs);
 	
 
-	if (FlexSys->g_flex) {
+	if (FlexSys->g_solver) {
 
 		FlexSys->g_buffers->MapBuffers();
 		FlexSys->getSimTimers();
@@ -373,7 +373,7 @@ FlexCHOP::execute(CHOP_Output* output,
 		FlexSys->update();
 
 	}
-	else if (FlexSys->g_flex) {
+	else if (FlexSys->g_solver) {
 
 		double t1 = GetSeconds();
 		for (int i = 0; i < output->numSamples; i++) {

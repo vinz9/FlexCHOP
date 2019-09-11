@@ -67,6 +67,20 @@ struct VolumeBox
 
 };
 
+struct GpuTimers
+{
+	/*unsigned long long renderBegin;
+	unsigned long long renderEnd;
+	unsigned long long renderFreq;*/
+	unsigned long long computeBegin;
+	unsigned long long computeEnd;
+	unsigned long long computeFreq;
+
+	/*static const int maxTimerCount = 4;
+	double timers[benchmarkEndFrame][maxTimerCount];
+	int timerCount[benchmarkEndFrame];*/
+};
+
 struct SimBuffers
 {
 	NvFlexVector<Vec4> positions;
@@ -164,7 +178,7 @@ class FlexSystem {
 	void initScene();
 	void postInitScene();
 	
-	NvFlexSolver* g_flex;
+	NvFlexSolver* g_solver;
 	NvFlexLibrary* g_flexLib;
 
 	NvFlexParams g_params;
@@ -193,6 +207,7 @@ class FlexSystem {
 
 
 	int g_maxDiffuseParticles;
+	int g_maxContactsPerParticle;
 	unsigned char g_maxNeighborsPerParticle;
 
 
@@ -209,6 +224,10 @@ class FlexSystem {
 	float simLatency;
 
 	int cursor;
+
+	NvFlexSolverDesc g_solverDesc;
+
+	GpuTimers g_GpuTimers;
 
 
 

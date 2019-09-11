@@ -229,7 +229,7 @@ FlexSystem::FlexSystem()
 	g_maxDiffuseParticles=0;
 	numDiffuse = 0;
 
-	g_flex = NULL;
+	g_solver = NULL;
 
 
 	time1 = 0;
@@ -246,12 +246,12 @@ FlexSystem::FlexSystem()
 FlexSystem::~FlexSystem(){
 
 
-	if (g_flex)
+	if (g_solver)
 	{
 		if(g_buffers)
 			delete g_buffers;
 
-		NvFlexDestroySolver(g_flex);
+		NvFlexDestroySolver(g_solver);
 		NvFlexShutdown(g_flexLib);
 	}
 
@@ -265,12 +265,13 @@ void FlexSystem::getSimTimers() {
 
 	if (g_profile) {
 		memset(&g_timers, 0, sizeof(g_timers));
-		NvFlexGetTimers(g_flex, &g_timers);
+		NvFlexGetTimers(g_solver, &g_timers);
 		simLatency = g_timers.total;
 	}
 	else
-		simLatency = NvFlexGetDeviceLatency(g_flex);
-
+		//simLatency = NvFlexGetDeviceLatency(g_flex);
+		simLatency = NvFlexGetDeviceLatency(g_solver, &g_GpuTimers.computeBegin, &g_GpuTimers.computeEnd, &g_GpuTimers.computeFreq);
+		//simLatency = 0;
 }
 
 void FlexSystem::initSystem() {
@@ -334,9 +335,9 @@ void FlexSystem::initParams() {
 	g_params.particleCollisionMargin = 0.0f;
 	g_params.shapeCollisionMargin = 0.0f;
 	g_params.collisionDistance = 0.0f;
-	g_params.plasticThreshold = 0.0f;
+	/*g_params.plasticThreshold = 0.0f;
 	g_params.plasticCreep = 0.0f;
-	g_params.fluid = true;
+	g_params.fluid = true;*/
 	g_params.sleepThreshold = 0.0f;
 	g_params.shockPropagation = 0.0f;
 	g_params.restitution = 0.001f;
@@ -344,7 +345,6 @@ void FlexSystem::initParams() {
 	g_params.maxSpeed = FLT_MAX;
 	g_params.maxAcceleration = 100.0f;	// approximately 10x gravity
 
-	g_params.smoothing = 1.0f;
 
 	g_params.relaxationMode = eNvFlexRelaxationLocal;
 	g_params.relaxationFactor = 1.0f;
@@ -358,9 +358,9 @@ void FlexSystem::initParams() {
 	g_params.diffuseBuoyancy = 1.0f;
 	g_params.diffuseDrag = 0.8f;
 	g_params.diffuseBallistic = 16;
-	g_params.diffuseSortAxis[0] = 0.0f;
+	/*g_params.diffuseSortAxis[0] = 0.0f;
 	g_params.diffuseSortAxis[1] = 0.0f;
-	g_params.diffuseSortAxis[2] = 0.0f;
+	g_params.diffuseSortAxis[2] = 0.0f;*/
 	g_params.diffuseLifetime = 2.0f;
 
 	g_params.numPlanes = 0;
@@ -375,14 +375,14 @@ void FlexSystem::initScene(){
 	cursor = 0;
 
 
-	if (g_flex)
+	if (g_solver)
 	{
 		
 		if (g_buffers)
 			delete g_buffers;
 
-		NvFlexDestroySolver(g_flex);
-		g_flex = NULL;
+		NvFlexDestroySolver(g_solver);
+		g_solver = NULL;
 
 	}
 
@@ -403,6 +403,9 @@ void FlexSystem::initScene(){
 	g_sceneLower = FLT_MAX;
 	g_sceneUpper = -FLT_MAX;
 
+	// initialize solver desc
+	NvFlexSetSolverDescDefaults(&g_solverDesc);
+
 	ClearShapes();
 
 
@@ -411,17 +414,17 @@ void FlexSystem::initScene(){
 	g_maxDiffuseParticles = 0;
 	g_maxNeighborsPerParticle = 96;
 
+	g_maxContactsPerParticle = 6;
+
 }
 
 void FlexSystem::postInitScene(){
 
 
-	if (!g_params.fluid) {
+	/*if (!g_params.fluid) {
 		g_params.particleCollisionMargin = g_params.radius*0.5f;
 		g_params.shapeCollisionMargin = g_params.radius*0.5f;
 	}
-
-	
 
 	if(g_params.fluid)
 		g_params.fluidRestDistance = g_params.radius*0.65f;
@@ -441,6 +444,24 @@ void FlexSystem::postInitScene(){
 			g_params.collisionDistance = g_params.fluidRestDistance*0.5f;
 	}
 
+
+	*/
+
+	g_solverDesc.featureMode = eNvFlexFeatureModeSimpleFluids;
+
+	g_params.fluidRestDistance = g_params.radius*0.65f;
+
+	if (g_params.solidRestDistance == 0.0f)
+		g_params.solidRestDistance = g_params.radius;
+
+	// if fluid present then we assume solid particles have the same radius
+	if (g_params.fluidRestDistance > 0.0f)
+		g_params.solidRestDistance = g_params.fluidRestDistance;
+
+	// set collision distance automatically based on rest distance if not alraedy set
+	if (g_params.collisionDistance == 0.0f)
+		g_params.collisionDistance = Max(g_params.solidRestDistance, g_params.fluidRestDistance)*0.5f;
+
 	// default particle friction to 10% of shape friction
 	if (g_params.particleFriction == 0.0f)
 		g_params.particleFriction = g_params.dynamicFriction*0.1f;
@@ -452,13 +473,13 @@ void FlexSystem::postInitScene(){
 
 	g_maxDiffuseParticles = 0;
 
-	if (g_params.fluid) {
+	//if (g_params.fluid) {
 
 		for (int i = 0; i < nVolumeBoxes; i++) {
 
 			CreateCenteredParticleGrid(Point3(g_volumeBoxes[i].mPos.x, g_volumeBoxes[i].mPos.y, g_volumeBoxes[i].mPos.z), g_volumeBoxes[i].mRot, Point3(g_volumeBoxes[i].mSize.x, g_volumeBoxes[i].mSize.y, g_volumeBoxes[i].mSize.z), g_params.fluidRestDistance, Vec3(0.0f), 1, false, NvFlexMakePhase(0, eNvFlexPhaseSelfCollide | eNvFlexPhaseFluid), g_params.fluidRestDistance*0.01f);
 		}
-	}
+	/*}
 	else {
 
 		for (int i = 0; i < nVolumeBoxes; i++) {
@@ -466,9 +487,10 @@ void FlexSystem::postInitScene(){
 			CreateCenteredParticleGrid(Point3(g_volumeBoxes[i].mPos.x, g_volumeBoxes[i].mPos.y, g_volumeBoxes[i].mPos.z), g_volumeBoxes[i].mRot, Point3(g_volumeBoxes[i].mSize.x, g_volumeBoxes[i].mSize.y, g_volumeBoxes[i].mSize.z), g_params.radius, Vec3(0.0f), 1, false, NvFlexMakePhase(0, eNvFlexPhaseSelfCollide), g_params.radius*0.01f);
 		}
 
-	}
+	}*/
 
-	g_params.anisotropyScale = 3.0f/g_params.radius;
+	//g_params.anisotropyScale = 3.0f/g_params.radius;
+	g_params.anisotropyScale = 1.0f;
 
 
 	uint32_t numParticles = g_buffers->positions.size(); //non zero if init volume boxes
@@ -512,8 +534,15 @@ void FlexSystem::postInitScene(){
 	for (int i = 0; i < g_buffers->positions.size(); ++i)
 		g_buffers->restPositions[i] = g_buffers->positions[i];
 
+	g_solverDesc.maxParticles = maxParticles;
+	g_solverDesc.maxDiffuseParticles = g_maxDiffuseParticles;
+	g_solverDesc.maxNeighborsPerParticle = g_maxNeighborsPerParticle;
+	g_solverDesc.maxContactsPerParticle = g_maxContactsPerParticle;
 
-	g_flex = NvFlexCreateSolver(g_flexLib, maxParticles, g_maxDiffuseParticles, g_maxNeighborsPerParticle);
+	// main create method for the Flex solver
+	g_solver = NvFlexCreateSolver(g_flexLib, &g_solverDesc);
+
+	//g_flex = NvFlexCreateSolver(g_flexLib, maxParticles, g_maxDiffuseParticles, g_maxNeighborsPerParticle);
 
 }
 
@@ -633,7 +662,7 @@ void FlexSystem::setShapes(){
 
 	if(g_buffers->shapeFlags.size()){
 	NvFlexSetShapes(
-				g_flex,
+				g_solver,
 				g_buffers->shapeGeometry.buffer,
 				g_buffers->shapePositions.buffer,
 				g_buffers->shapeRotations.buffer,
@@ -661,7 +690,7 @@ void FlexSystem::emission(){
 		Point3 emitterSize = g_rectEmitters[e].mSize;
 		Point3 emitterPos = g_rectEmitters[e].mPos;
 
-		float r;
+		/*float r;
 		int phase;
 
 		if (g_params.fluid)
@@ -673,7 +702,10 @@ void FlexSystem::emission(){
 		{
 			r = g_params.solidRestDistance;
 			phase = NvFlexMakePhase(0, eNvFlexPhaseSelfCollide);
-		}
+		}*/
+
+		float r = g_params.fluidRestDistance;
+		int phase = NvFlexMakePhase(0, eNvFlexPhaseSelfCollide | eNvFlexPhaseFluid);
 
 		float numSlices = (g_rectEmitters[e].mSpeed / r)*g_dt;
 
@@ -761,7 +793,7 @@ void FlexSystem::emission(){
 void FlexSystem::update(){
 
 
-		activeParticles = NvFlexGetActiveCount(g_flex);
+		activeParticles = NvFlexGetActiveCount(g_solver);
 
 
 		time1 = GetSeconds();
@@ -773,35 +805,44 @@ void FlexSystem::update(){
 
 		g_buffers->UnmapBuffers();
 
+		NvFlexCopyDesc copyDesc;
+		copyDesc.dstOffset = 0;
+		copyDesc.srcOffset = 0;
 
 		if (g_buffers->activeIndices.size()) {
-			NvFlexSetActive(g_flex, g_buffers->activeIndices.buffer, g_buffers->activeIndices.size());
+
+			copyDesc.elementCount = g_buffers->activeIndices.size();
+
+			NvFlexSetActive(g_solver, g_buffers->activeIndices.buffer, &copyDesc);
+			NvFlexSetActiveCount(g_solver, g_buffers->activeIndices.size());
 		}
 
 		if (g_buffers->positions.size()) {
 
+			copyDesc.elementCount = g_buffers->positions.size();
 
-			NvFlexSetParticles(g_flex, g_buffers->positions.buffer, g_buffers->positions.size());
-			NvFlexSetVelocities(g_flex, g_buffers->velocities.buffer, g_buffers->velocities.size());
-			NvFlexSetPhases(g_flex, g_buffers->phases.buffer, g_buffers->phases.size());
+			NvFlexSetParticles(g_solver, g_buffers->positions.buffer, &copyDesc);
+			NvFlexSetVelocities(g_solver, g_buffers->velocities.buffer, &copyDesc);
+			NvFlexSetPhases(g_solver, g_buffers->phases.buffer, &copyDesc);
 
 		}
 
 		setShapes();
 
-		NvFlexSetParams(g_flex, &g_params);
+		NvFlexSetParams(g_solver, &g_params);
 
-		NvFlexUpdateSolver(g_flex, g_dt, g_numSubsteps, g_profile);
+		NvFlexUpdateSolver(g_solver, g_dt, g_numSubsteps, g_profile);
 
 
 		if(g_buffers->positions.size()){
 
+			copyDesc.elementCount = g_buffers->positions.size();
 
-			NvFlexGetParticles(g_flex, g_buffers->positions.buffer, g_buffers->positions.size());
-			NvFlexGetVelocities(g_flex, g_buffers->velocities.buffer, g_buffers->velocities.size());
+			NvFlexGetParticles(g_solver, g_buffers->positions.buffer, &copyDesc);
+			NvFlexGetVelocities(g_solver, g_buffers->velocities.buffer, &copyDesc);
 
 		}
 
-		activeParticles = NvFlexGetActiveCount(g_flex);
+		activeParticles = NvFlexGetActiveCount(g_solver);
 
 }
