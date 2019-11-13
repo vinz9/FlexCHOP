@@ -37,8 +37,8 @@ I have an ongoing TOP implementation in TouchDesigner, more optimized and with a
 
 ## Change Log
 
-11/13/2019 0.4 : added support for a single animated and deforming triangle mesh collider. For TD 2019.10000+. To get the plugin to load with Experimental, copy cudart64_92.dll from TD 2019.10000+ alongside the other dlls. There is currently an issue with the GLSL shader for the instancing.
-09/10/2019 0.3 : Upgrade to flex 1.2
+11/13/2019 0.4 : added support for a single animated and deforming triangle mesh collider. For TD 2019.10000+. To get the plugin to load with Experimental, copy cudart64_92.dll from TD 2019.10000+ alongside the other dlls. There is currently an issue with the GLSL shader for the instancing.  
+09/10/2019 0.3 : Upgrade to flex 1.2  
 09/10/2019 0.2 : Upgraded to work with 2019.14650 and later series of TouchDesigner (Spring 2019 Release), and be usable as a Custom OP. Thanks to Malcolm Bechard for the upgrade.  
 09/29/2017 0.1 : initial release, flex 1.1 library
 
