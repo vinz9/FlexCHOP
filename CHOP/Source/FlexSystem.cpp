@@ -9,6 +9,24 @@ void ErrorCallback(NvFlexErrorSeverity, const char* msg, const char* file, int l
 }
 
 
+void VMesh::GetBounds(Vector3& outMinExtents, Vector3& outMaxExtents) const
+{
+	Point3 minExtents(FLT_MAX);
+	Point3 maxExtents(-FLT_MAX);
+
+	// calculate face bounds
+	for (uint32_t i = 0; i < m_positions.size(); ++i)
+	{
+		const Point3& a = Point3(m_positions[i].x, m_positions[i].y, m_positions[i].z);
+
+		minExtents = Min(a, minExtents);
+		maxExtents = Max(a, maxExtents);
+	}
+
+	outMinExtents = Vector3(minExtents);
+	outMaxExtents = Vector3(maxExtents);
+}
+
 SimBuffers::SimBuffers(NvFlexLibrary* l) :
 	positions(l), restPositions(l), velocities(l), phases(l), densities(l),
 	anisotropy1(l), anisotropy2(l), anisotropy3(l), normals(l), smoothPositions(l),
@@ -231,6 +249,9 @@ FlexSystem::FlexSystem()
 
 	g_solver = NULL;
 
+	deformingMesh = 0;
+	g_triangleCollisionMesh = NULL;
+	triangleCollisionMeshId = NULL;
 
 	time1 = 0;
 	time2 = 0;
@@ -245,6 +266,15 @@ FlexSystem::FlexSystem()
 
 FlexSystem::~FlexSystem(){
 
+	if (g_triangleCollisionMesh) {
+		delete g_triangleCollisionMesh;
+		g_triangleCollisionMesh = NULL;
+	}
+
+	if (triangleCollisionMeshId) {
+		NvFlexDestroyTriangleMesh(g_flexLib, triangleCollisionMeshId);
+		triangleCollisionMeshId = NULL;
+	}
 
 	if (g_solver)
 	{
@@ -365,6 +395,9 @@ void FlexSystem::initParams() {
 
 	g_params.numPlanes = 0;
 
+	//g_params.collisionDistance = 0.05f;
+	//g_params.shapeCollisionMargin = 0.00001f;
+
 }
 
 void FlexSystem::initScene(){
@@ -383,6 +416,11 @@ void FlexSystem::initScene(){
 
 		NvFlexDestroySolver(g_solver);
 		g_solver = NULL;
+
+		if (g_triangleCollisionMesh) {
+			delete g_triangleCollisionMesh;
+			g_triangleCollisionMesh = NULL;
+		}
 
 	}
 
@@ -420,32 +458,6 @@ void FlexSystem::initScene(){
 
 void FlexSystem::postInitScene(){
 
-
-	/*if (!g_params.fluid) {
-		g_params.particleCollisionMargin = g_params.radius*0.5f;
-		g_params.shapeCollisionMargin = g_params.radius*0.5f;
-	}
-
-	if(g_params.fluid)
-		g_params.fluidRestDistance = g_params.radius*0.65f;
-
-	// by default solid particles use the maximum radius
-	if (g_params.fluid && g_params.solidRestDistance == 0.0f)
-		g_params.solidRestDistance = g_params.fluidRestDistance;
-	else
-		g_params.solidRestDistance = g_params.radius;
-
-	// collision distance with shapes half the radius
-	if (g_params.collisionDistance == 0.0f)
-	{
-		g_params.collisionDistance = g_params.radius*0.5f;
-
-		if (g_params.fluid)
-			g_params.collisionDistance = g_params.fluidRestDistance*0.5f;
-	}
-
-
-	*/
 
 	g_solverDesc.featureMode = eNvFlexFeatureModeSimpleFluids;
 
@@ -492,6 +504,11 @@ void FlexSystem::postInitScene(){
 	//g_params.anisotropyScale = 3.0f/g_params.radius;
 	g_params.anisotropyScale = 1.0f;
 
+	//*******CREATE TRIANGLE MESH
+
+	if (g_triangleCollisionMesh) {
+		triangleCollisionMeshId = CreateTriangleMesh(g_triangleCollisionMesh);
+	}
 
 	uint32_t numParticles = g_buffers->positions.size(); //non zero if init volume boxes
 
@@ -846,3 +863,80 @@ void FlexSystem::update(){
 		activeParticles = NvFlexGetActiveCount(g_solver);
 
 }
+
+NvFlexTriangleMeshId FlexSystem::CreateTriangleMesh(VMesh* m)
+{
+	/*if (!m)
+		return 0;*/
+
+	Vec3 lower, upper;
+	//m->GetBounds(lower, upper);
+
+	lower = m->minExtents;
+	upper = m->maxExtents;
+
+	NvFlexVector<Vec4> positions(g_flexLib);
+	NvFlexVector<int> indices(g_flexLib);
+
+	positions.assign((Vec4*)&m->m_positions[0], m->m_positions.size());
+	indices.assign((int*)&m->m_indices[0], m->m_indices.size());
+
+	positions.unmap();
+	indices.unmap();
+
+	NvFlexTriangleMeshId flexMesh = NvFlexCreateTriangleMesh(g_flexLib);
+	NvFlexUpdateTriangleMesh(g_flexLib, flexMesh, positions.buffer, indices.buffer, m->GetNumVertices(), m->GetNumFaces(), (float*)&lower, (float*)&upper);
+
+	// entry in the collision->render map
+	//g_meshes[flexMesh] = CreateGpuMesh(m);
+
+	return flexMesh;
+}
+
+
+void FlexSystem::UpdateTriangleMesh(VMesh* m, NvFlexTriangleMeshId flexMeshId)
+{
+	//if (m) {
+
+
+		Vec3 lower, upper;
+		//m->GetBounds(lower, upper);
+
+		lower = m->minExtents;
+		upper = m->maxExtents;
+
+		NvFlexVector<Vec4> positions(g_flexLib);
+		NvFlexVector<int> indices(g_flexLib);
+
+		positions.assign((Vec4*)&m->m_positions[0], m->m_positions.size());
+		indices.assign((int*)&m->m_indices[0], m->m_indices.size());
+
+		positions.unmap();
+		indices.unmap();
+
+		NvFlexUpdateTriangleMesh(g_flexLib, flexMeshId, positions.buffer, indices.buffer, m->GetNumVertices(), m->GetNumFaces(), (float*)&lower, (float*)&upper);
+
+		// entry in the collision->render map
+		//g_meshes[flexMesh] = CreateGpuMesh(m);
+	//}
+}
+
+void FlexSystem::AddTriangleMesh(NvFlexTriangleMeshId mesh, Vec3 translation, Quat rotation, Vec3 prevTrans, Quat prevRot, Vec3 scale)
+{
+	//Vec3 lower, upper;
+	//NvFlexGetTriangleMeshBounds(g_flexLib, mesh, lower, upper);
+
+	NvFlexCollisionGeometry geo;
+	geo.triMesh.mesh = mesh;
+	geo.triMesh.scale[0] = scale.x;
+	geo.triMesh.scale[1] = scale.y;
+	geo.triMesh.scale[2] = scale.z;
+
+	g_buffers->shapePositions.push_back(Vec4(translation, 0.0f));
+	g_buffers->shapeRotations.push_back(Quat(rotation));
+	g_buffers->shapePrevPositions.push_back(Vec4(prevTrans, 0.0f));
+	g_buffers->shapePrevRotations.push_back(Quat(prevRot));
+	g_buffers->shapeGeometry.push_back((NvFlexCollisionGeometry&)geo);
+	g_buffers->shapeFlags.push_back(NvFlexMakeShapeFlags(eNvFlexShapeTriangleMesh, false));
+}
+

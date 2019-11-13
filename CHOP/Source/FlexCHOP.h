@@ -50,13 +50,6 @@ public:
 	virtual void		setupParameters(OP_ParameterManager* manager, void* reserved1) override;
 	//virtual void		pulsePressed(const char* name) override;
 
-	float maxVel;
-
-	int maxParticles;
-	int activeIndicesSize;
-	int inactiveIndicesSize;
-
-	float timer;
 
 private:
 
@@ -69,12 +62,33 @@ private:
 	// function is called, then passes back to the CHOP 
 	int						 myExecuteCount;
 
+	float maxVel;
+
+	int maxParticles;
+	int activeIndicesSize;
+	int inactiveIndicesSize;
+
+	float timer;
+
+	void updateTriangleMesh(const OP_Inputs* inputs);
+	void initTriangleMesh(const OP_Inputs* inputs);
+
+	void initVolumeBoxes(const OP_Inputs* inputs);
+	void initEmitters(const OP_Inputs* inputs);
+
+	void updatePlanes(const OP_Inputs* inputs);
+	void updateEmitters(const OP_Inputs* inputs);
+	void updateSpheresCols(const OP_Inputs* inputs);
+	void updateBoxesCols(const OP_Inputs* inputs);
+
+	void setupParamsCustom(OP_ParameterManager* manager);
+	void setupParamsSolver(OP_ParameterManager* manager);
+	void setupParamsParts(OP_ParameterManager* manager);
+	void setupParamsEmission(OP_ParameterManager* manager);
+	void setupParamsCollisions(OP_ParameterManager* manager);
 
 	FlexSystem* FlexSys;
 
-
-
-	//enum { TX, TY, TZ, VX, VY, VZ };
 	enum { TX, TY, TZ, VX, VY, VZ, Q1X, Q1Y, Q1Z, Q1W, Q2X, Q2Y, Q2Z, Q2W, Q3X, Q3Y, Q3Z, Q3W };
 
 };

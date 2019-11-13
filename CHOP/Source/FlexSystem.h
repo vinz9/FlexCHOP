@@ -10,7 +10,7 @@
 
 
 #include <core/platform.h>
-#include <core/mesh.h>
+//#include <core/mesh.h>
 
 #include <core/perlin.h>
 
@@ -22,6 +22,22 @@
 using namespace std;
 
 inline float sqr(float x) { return x*x; }
+
+struct VMesh
+{
+
+	uint32_t GetNumVertices() const { return uint32_t(m_positions.size()); }
+	uint32_t GetNumFaces() const { return uint32_t(m_indices.size()) / 3; }
+
+	void GetBounds(Vector3& minExtents, Vector3& maxExtents) const;
+
+	Vector3 minExtents;
+	Vector3 maxExtents;
+
+	std::vector<Vector4> m_positions;
+	std::vector<uint32_t> m_indices;
+
+};
 
 struct Emitter
 {
@@ -167,9 +183,9 @@ class FlexSystem {
 
 	void AddBox(Vec3 halfEdge = Vec3(2.0f), Vec3 center = Vec3(0.0f), Quat quat = Quat(), bool dynamic = false);
 
-	NvFlexTriangleMeshId CreateTriangleMesh(Mesh* m);
-	void UpdateTriangleMesh(Mesh* m, NvFlexTriangleMeshId flexMeshId);
-	void AddTriangleMesh(NvFlexTriangleMeshId mesh, Vec3 translation, Quat rotation, Vec3 scale);
+	NvFlexTriangleMeshId CreateTriangleMesh(VMesh* m);
+	void UpdateTriangleMesh(VMesh* m, NvFlexTriangleMeshId flexMeshId);
+	void AddTriangleMesh(NvFlexTriangleMeshId mesh, Vec3 translation, Quat rotation, Vec3 prevTrans, Quat prevRot, Vec3 scale);
 
 
 	void emission();
@@ -177,6 +193,17 @@ class FlexSystem {
 
 	void initScene();
 	void postInitScene();
+
+	int deformingMesh;
+
+	Vec3 curMeshTrans;
+	Quat curMeshRot;
+
+	Vec3 previousMeshTrans;
+	Quat previousMeshRot;
+
+	VMesh* g_triangleCollisionMesh;
+	NvFlexTriangleMeshId triangleCollisionMeshId;
 	
 	NvFlexSolver* g_solver;
 	NvFlexLibrary* g_flexLib;
@@ -228,8 +255,6 @@ class FlexSystem {
 	NvFlexSolverDesc g_solverDesc;
 
 	GpuTimers g_GpuTimers;
-
-
 
 
 };
