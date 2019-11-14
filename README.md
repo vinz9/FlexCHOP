@@ -4,8 +4,8 @@ Look at the Releases page https://github.com/vinz9/FlexCHOP/releases for the com
 
 NVIDIA FleX 1.2 solver (https://developer.nvidia.com/flex) integration in TouchDesigner as a CHOP with a limited feature set :
 * liquid particles only
-* planes, boxes and spheres colliders
-* single animated and deforming triangle mesh collider
+* collisions against primitives : planes, boxes and spheres
+* collisions against a single animated and deforming triangle mesh
 * simple disc and rectangle emitters
 
 A NVIDIA graphics card is required since this uses the CUDA version of the library. Geforce 1070 or better recommended
@@ -15,9 +15,9 @@ A NVIDIA graphics card is required since this uses the CUDA version of the libra
 ## Usage
 
 Sample Toe files for TouchDesigner 099 are provided.
-demo.toe : emitters and primitive colliders
-demo_torusCollision.toe : animated and deforming triangle mesh collider
-Shift-R will reset the timeline to frame 1 which resets the simulation.
+demo.toe : emitters and collisions against primitives
+demo_torusCollision.toe : collisions against an animated and deforming triangle mesh 
+Shift-R will reset the timeline to frame 1 which is set to reset the simulation in those examples (Reset parameter on the Chop).
 
 Most parameters on the FlexCHOP are parameters of the solver, please refer to the official FleX documentation at https://gameworksdocs.nvidia.com/FleX/1.2/lib_docs/index.html for more information.
 FPS determines the timestep of the simulation, higher FPS than TD FPS means the simulation will run in slow motion.
@@ -37,7 +37,7 @@ I have an ongoing TOP implementation in TouchDesigner, more optimized and with a
 
 ## Change Log
 
-11/13/2019 0.4 : added support for a single animated and deforming triangle mesh collider. For TD 2019.10000+. To get the plugin to load with Experimental, copy cudart64_92.dll from TD 2019.10000+ alongside the other dlls. There is currently an issue with the GLSL shader for the instancing.  
+11/13/2019 0.4 : added support for collisions against a single animated and deforming triangle mesh. For TD 2019.10000+. To get the plugin to load with Experimental, copy cudart64_92.dll from TD 2019.10000+ alongside the other dlls. There is currently an issue with the GLSL shader for the instancing.  
 09/10/2019 0.3 : Upgrade to flex 1.2  
 09/10/2019 0.2 : Upgraded to work with 2019.14650 and later series of TouchDesigner (Spring 2019 Release), and be usable as a Custom OP. Thanks to Malcolm Bechard for the upgrade.  
 09/29/2017 0.1 : initial release, flex 1.1 library
