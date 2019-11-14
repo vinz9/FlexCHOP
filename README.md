@@ -27,7 +27,7 @@ Emission and primitive Collisions are handled using CHOPs, with one emitter/coll
 Refer to demo.toe to see which channels are required (channel order is important)
 
 ## Compilation
-To compile with Visual Studio 2015, download the FleX 1.2 library from https://github.com/NVIDIAGameWorks/FleX and put the directories in a flex folder at the root of the repository (you should have flex/bin, flex/core, ... alongside CHOP/Source).
+To compile with Visual Studio 2015, download the FleX 1.2 library from https://github.com/NVIDIAGameWorks/FleX (you need to get access here first https://developer.nvidia.com/gameworks-source-github) and put the directories in a flex folder at the root of the repository (you should have flex/bin, flex/core, ... alongside CHOP/Source).
 You also need to manually copy the flex .dlls (NvFlexDeviceRelease_x64.dll, NvFlexReleaseCUDA_x64.dll) from flex\bin to CHOP\Source\Release or the FlexChop dll will fail to load.
 
 
